@@ -1,0 +1,454 @@
+/* třída podle roku voleb */
+.cl_1996, .cl_1996z,
+.cl_1998, .cl_1998z,
+.cl_2002, .cl_2002z,
+.cl_2006, .cl_2006z,
+.cl_2010, .cl_2010z,
+.cl_2013, .cl_2013z,
+.cl_2017, .cl_2017z {
+ 
+   
+}
+
+
+
+/* trida podle strany */
+
+.ODS {
+    fill: #0000cc;
+}
+
+.CSSD {
+    fill: #ff6600;
+}
+
+.KSCM {
+    fill: #cc0000;
+}
+
+.KDU-CSL {
+    fill: #ffcc00;
+}
+
+.SPR-RSC {
+    fill: #0;
+}
+
+.ODA {
+    fill: #336699;
+}
+
+.US {
+    fill: #336666;
+}
+
+.US-DEU {
+    fill: #336666;
+}
+
+.SZ {
+    fill: #339933;
+}
+
+.TOP09 {
+    fill: #cc66cc;
+}
+
+.VV {
+    fill: #00ffff;
+}
+
+.ANO {
+    fill: #33ccff;
+}
+
+.USVIT {
+    fill: #669933;
+}
+
+
+
+/* tridy bodu - poslance */
+.point{
+   opacity: 0.6;
+    rx: 4;
+    ry: 4;
+}
+
+
+.point-selected {
+    opacity: 1;
+    rx: 7;
+    ry: 7;    
+}
+
+
+
+/* linky mezi poslanci */
+.line {
+    stroke-width: 2px;
+    fill: none;
+    opacity: 0.1;
+}
+
+.line-selected {
+    stroke-width: 5px;
+    fill: none;
+    opacity: 0.5;
+}
+
+
+
+/* message*/
+.message {
+    opacity: 1;
+    font-family: sans-serif;
+    font-size: 1em;
+    fill: red; 
+}
+
+.yearText {
+    opacity: 1;
+    font-family: sans-serif;
+    font-size: 1em;
+    fill: black; 
+}
+
+.sipka_rok {
+    fill: lightgray;
+    cursor: pointer;
+}
+
+.sipka_rok:hover {
+    fill: darkgray;
+}
+
+
+.popisRoku {
+    opacity: 0.8;
+    /*fill: lightgray;*/
+    fill: white;
+}
+
+.popisVolebLinka {
+    stroke-width: 1px;
+    fill: none;
+    stroke: gray;
+}
+
+
+.popisVolebStrana {
+    opacity: 1;
+    font-family: sans-serif;
+    font-size: 0.9em;
+    font-weight: 600;
+    fill: black; 
+}
+
+.popisVolebVysledkyStrany {
+    opacity: 1;
+    font-family: sans-serif;
+    font-size: 0.7em;
+    font-weight: 600;
+    fill: black; 
+}
+
+.popisVolebPoznamka {
+     opacity: 1;
+    font-family: sans-serif;
+    font-size: 0.7em;
+    fill: black; 
+}
+
+.popisVolebUcast {
+     opacity: 1;
+    font-family: sans-serif;
+    font-weight: 600;
+    font-size: 0.7em;
+    fill: black; 
+}
+
+
+/* skryty objekt */
+.hidden {
+    display: none;
+}
+
+/* zobrazeny objekt */
+.revealed {
+    display: inline;
+}
+
+
+/* - pro testovani
+body {
+    margin: 0;
+    font-family: 'Lato', sans-serif;
+    background: #888;
+}
+*/
+
+/* side panel */
+.sideOverlay {
+    height: 100%;
+    width: 200px;        
+    z-index: 2;
+    position: fixed;
+    top: 0;
+    right: -200px;        
+    background-color: rgba(0, 0, 0, 0.75);        
+    overflow: hidden;        
+    transition: 0.25s;
+}
+    
+.closeBtn {
+    color: #818181;
+    font-size: 30px;
+    text-decoration: none;        
+    position: absolute;
+    top: 0px;
+    left: 5px;        
+    cursor: default;
+}
+    
+.closeBtn:hover {
+    color: #f1f1f1;
+}
+
+/* vyhledavaci pole */
+#nameSearch {
+    border: 1px solid #555;
+    border-radius: 12px;
+    font-size: 12px;
+    width: 80%;
+    padding: 5px;
+    padding-left: 8px;
+    margin-top: 40px;
+    margin-bottom: 12px;
+    margin-left: 12px;
+    margin-right: 12px;
+}
+    
+
+/* div pro seznam lidi */
+#nameList {
+    height: auto;
+    width: 165px;        
+    list-style-type: none;            
+    margin-bottom: 0px;
+    margin-left: 12px;
+    margin-right: 12px;
+    margin-top: -10px;        
+    padding: 5px;        
+    background-color: #0;
+    text-decoration: none;
+    font-size: 12px;
+    font-family: sans-serif;
+    color: white;        
+    display: block;        
+    overflow-x: hidden;
+    overflow: auto;        
+    position: absolute;
+    left: 0;
+    top: 84px;
+    bottom: 15px;
+}
+    
+/* seznam jmen */
+#nameList li {
+    border-bottom: 1px solid #555;
+    margin-top: -1px;
+    background-color: #0;
+    padding: 5px;
+    text-decoration: none;
+    font-size: 12px;
+    color: white;
+    display: block;
+    cursor: pointer;
+}
+    
+#nameList li:hover {
+    background-color: #555555;
+}
+    
+
+/* styl roku u jmena */
+.jmeno_rok {
+    font-size: 9px;
+    color: #888
+}
+    
+
+/* tlacitko pro zobrazeni postraniho panelu*/
+#sidePanelBtn {
+    border-radius: 12px;
+    height: 34px;
+    width: 60px;
+    position: relative;
+    z-index: 1;
+    top: calc(-50% - 450px);
+    left: calc(100% - 25px);
+    background-color: rgba(0, 0, 0, 0.75);
+    overflow-x: hidden;
+    transition: 0.2s;
+    opacity: 0.6;
+}
+    
+#sidePanelBtn:hover {
+    opacity: 1;
+}
+    
+#searchIcon {
+   width: 30px;
+    position: relative;
+    left: -11px;
+}
+
+/* preloader */
+#preloader {
+    width: 76px;
+    height: 42px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: auto;
+    margin-top: -21px;
+    margin-left: -21px;
+    z-index: 100;
+}
+
+#preloadText {
+    font-size: 10px;
+    color: #0;
+    margin: 2px;
+    margin-top: 5px;
+    margin-left: -10px;
+    position: absolute;
+}
+
+/* SVG div*/
+#graphDiv {
+    background: white;
+    text-align: center;
+    height: 640px;
+    margin: auto;
+    /*position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;*/
+    
+}
+
+
+/* SVG */
+#graphSVG {
+    margin: auto;
+    position: relative;
+    top: 0; left: 0; bottom: 0; right: 0;
+}
+
+/*InfoPanel*/
+#infoPanel {
+    width: 300px;
+    height: 14px;
+    background: #d3d3d3;
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    top: 590px;
+    left: calc(50% - 150px);
+    padding: 15px;
+    border-radius: 6px;   
+}
+
+#nameTxt {
+    font-family: sans-serif;
+    font-size: 1.2em;
+    text-align: center;
+    position: relative;
+    top: -3px; 
+}
+
+#popisTxt {
+    font-family: sans-serif;
+    font-size: 0.8em;
+    text-align: left;
+    margin-top: 6px;
+    height: 75px;
+    overflow: hidden;
+}
+
+/*LinkPanel*/
+#linkPanel {
+    width: 300px;
+    
+    background: #d3d3d3;
+    position: relative;
+    padding: 15px;
+    border-radius: 6px;
+    top: calc(-50% - 290px);
+    left: calc(50% - 150px); 
+    z-index: 2;
+}
+
+
+.closeBtnLP {
+    color: #818181;
+    font-size: 30px;
+    text-decoration: none;        
+    position: absolute;
+    top: 0px;
+    right: 5px;        
+    cursor: default;
+}
+    
+.closeBtnLP:hover {
+    color: red;
+}
+
+
+#nameTxtLP {
+    font-family: sans-serif;
+    font-size: 1.2em;
+    text-align: center;
+    position: relative;
+    top: -3px; 
+}
+
+#URL1 {
+    font-family: sans-serif;
+    font-size: 0.8em;
+    text-align: center;
+    position: relative;
+    margin-top: 6px;
+    
+}
+
+#URL1:hover {
+    color: blue;
+    cursor: pointer;
+}
+
+#URL2 {
+    font-family: sans-serif;
+    font-size: 0.8em;
+    text-align: center;
+    position: relative;
+    margin-top: 6px;
+}
+
+#URL2:hover {
+    color: blue;
+    cursor: pointer;
+}
+
+#URL3 {
+    font-family: sans-serif;
+    font-size: 0.8em;
+    text-align: center;
+    position: relative;
+    margin-top: 6px;
+}
+
+#URL3:hover {
+    color: blue;
+    cursor: pointer;
+}

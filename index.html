@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="js/d3.min.js"></script>
+    
+    <link rel="stylesheet" type="text/css" href="css/volby.css">    
+
+</head>
+<style>
+ 
+    
+    
+</style>
+
+<body>
+   
+    <script>
+        // -------------------------------------------------------------
+        // promenne pro logiku
+        // -------------------------------------------------------------
+        
+        // seznam poslancu [jmeno, prijmeni, id] + rok narozeni, popis?
+        var repreList = [];
+        
+        // seznamy zvolenych
+        var zvoleni_1996 = [];
+        var zvoleni_1998 = [];
+        var zvoleni_2002 = [];
+        var zvoleni_2006 = [];
+        var zvoleni_2010 = [];
+        var zvoleni_2013 = [];
+        //var zvoleni_2017 = [];
+        
+        // seznamy zmen
+        
+        var zmeny_1996 = [];
+        var zmeny_1998 = [];
+        var zmeny_2002 = [];
+        var zmeny_2006 = [];
+        var zmeny_2010 = [];
+        var zmeny_2013 = [];
+       // var zmeny_2017 = [];        
+        
+        
+        // pocty kresel, ucasti
+        var vysledky_stran = [];
+        
+        // aktualne vybrane ID
+        var selectedID = ""; 
+ 
+        // -------------------------------------------------------------
+        // promenne pro graf
+        // -------------------------------------------------------------
+        
+        /* nastaveni parametru vizualizace */
+        var sirkaSVG  = 960;                        /* sirka celeho SVG */
+        var vyskaSVG = 800;                         /* vyska celeho SVG */   
+            
+        var sirkaRoku = 54;                         /* misto pro tlacitko s rokem voleb */
+        //var vyskaRoky = 110;                        /* vertikalni mezera mezi roky */           
+        var vyskaRoky = 95;                        /* vertikalni mezera mezi roky - 90px je default pro 2017*/           
+            
+        var sirkaGrafu = sirkaSVG-sirkaRoku;        /* zbyle misto pro graf */
+        
+            
+        // velikost Bodu (poslance) je definovana v CSS jako .point {rx ry}
+               
+        // SVG grafu
+        var gSVG = createSVG();
+        
+        // vytvor sekci definice v SVG 
+        var defs = gSVG.append("defs");
+        
+        // vyvtor objekty v DEFS sekci SVG
+        createSVGDefs();
+        
+        // vytvor "vrstvy" (skupiny) v SVG 0 - spodni, 3 - vrchni 
+        
+        //linky
+        var layer0 = gSVG.append("g") 
+            .attr("id","layer0");
+        
+        // body zmen
+        var layer1 = gSVG.append("g")
+            .attr("id","layer1");
+            
+        // info o volbach
+        var layer2 = gSVG.append("g")
+            .attr("id","layer2");
+            
+        // body poslancu
+        var layer3 = gSVG.append("g")
+            .attr("id","layer3");
+        
+        // info box
+        var layer4 = gSVG.append("g")
+            .attr("id","layer4");
+        
+        
+        // zakladni info pod grafem
+        var personalInfo = layer4.append ("text")
+            .attr("class", "message")
+            //.attr("fill", "black")
+            .attr("text-anchor", "middle")
+            .attr("x", sirkaSVG/2)
+            .attr("y", vyskaSVG-20)
+            .text("");
+        
+        
+        createPreloader();
+        createSidePanel();
+        createLinkPanel();
+        createInfoPanel();        
+        //nacti vsechna TSV a zacni
+        loadData();
+        
+        
+        
+        // -------------------------------------------------------------
+        // definice funkci
+        // -------------------------------------------------------------
+        
+        
+        // nacte data z TSV a JSON souboru, po nacteni naplni jmenny seznam a vykresli graf
+        function loadData() {
+            // zapni preloader
+            d3.select("#preloader").style("display", "inline");
+            //document.getElementById("preloader").style.display = "inline";
+            
+            // do fronty si dej TSV po nacteni spust funkci
+            var q = d3.queue()
+                .defer(d3.tsv, "data/poslanci_id.tsv")
+                .defer(d3.tsv, "data/1996.tsv")
+                .defer(d3.tsv, "data/1998.tsv")
+                .defer(d3.tsv, "data/2002.tsv")
+                .defer(d3.tsv, "data/2006.tsv")
+                .defer(d3.tsv, "data/2010.tsv")
+                .defer(d3.tsv, "data/2013.tsv")
+                //.defer(d3.tsv, "data/2017.tsv")
+            
+                .defer(d3.tsv, "data/zmeny1996.tsv")
+                .defer(d3.tsv, "data/zmeny1998.tsv")
+                .defer(d3.tsv, "data/zmeny2002.tsv")
+                .defer(d3.tsv, "data/zmeny2006.tsv")
+                .defer(d3.tsv, "data/zmeny2010.tsv")
+                .defer(d3.tsv, "data/zmeny2013.tsv")
+            
+                .defer(d3.json, "data/vysledky_stran.json")
+                .await( function (error, rL, z_1996, z_1998, z_2002, z_2006, z_2010, z_2013, zm_1996, zm_1998, zm_2002, zm_2006, zm_2010, zm_2013, vysledky ) {
+                    if (error) { console.log(error); }
+                    // uloz nacetna data
+                    repreList = rL;
+                    zvoleni_1996 = z_1996;
+                    zvoleni_1998 = z_1998;
+                    zvoleni_2002 = z_2002;
+                    zvoleni_2006 = z_2006;
+                    zvoleni_2010 = z_2010;
+                    zvoleni_2013 = z_2013;
+                    //zvoleni_2017 = z_2017;
+                    
+                    zmeny_1996 = zm_1996;
+                    zmeny_1998 = zm_1998;
+                    zmeny_2002 = zm_2002;
+                    zmeny_2006 = zm_2006;
+                    zmeny_2010 = zm_2010;
+                    zmeny_2013 = zm_2013;
+                    
+                    vysledky_stran = vysledky;
+                    
+                    /*
+                    
+                    // kontrolni vypis 
+                    console.log("repreList\n" + repreList);
+                    console.log("zvoleni_1996\n" + zvoleni_1996);
+                    console.log("zvoleni_1998\n" + zvoleni_1998);
+                    console.log("zvoleni_2002\n" + zvoleni_2002);
+                    console.log("zvoleni_2006\n" + zvoleni_2006);
+                    console.log("zvoleni_2010\n" + zvoleni_2010);
+                    console.log("zvoleni_2013\n" + zvoleni_2013);
+                    console.log("zvoleni_2017\n" + zvoleni_2013);
+                    
+                    console.log("zmeny_1996\n" + zmeny_1996);
+                    console.log("zmeny_1998\n" + zmeny_1998);
+                    console.log("zmeny_2002\n" + zmeny_2002);
+                    console.log("zmeny_2006\n" + zmeny_2006);
+                    console.log("zmeny_2010\n" + zmeny_2010);
+                    console.log("zmeny_2013\n" + zmeny_2013);
+                    
+                    console.log("vysledky\n" + vysledky_stran);
+                    
+                    */
+                    
+                    // vypni preloader
+                    d3.select("#preloader").style("display", "none"); 
+                                    
+                    // napln nameList
+                    fillNameList();    
+                    
+                    // vykresli "poslance" do vrstvy 2
+                    drawAllPoints ();
+        
+                    // vykresli spojnice mezi "poslanci"
+                    drawConnections(layer0);
+        
+                    // vykresli tlacitka s rokem voleb do vrstvy 1
+                    drawYearLabels (layer2);
+                });        
+    }              
+        
+        
+        // vytvor SVG
+        function createSVG() {
+            // vytvor v body div 
+            var gDiv = d3.select("body").append("div");
+            gDiv.attr("id", "graphDiv");
+            
+            // vytvor SVG v graphDiv            
+            var svg = gDiv.append("svg");
+            svg.attr("id", "graphSVG")
+                .attr("width", sirkaSVG)
+                .attr("height", vyskaSVG);
+            
+            return svg;            
+        }
+        
+        
+        // napln DEFS sekci
+        function createSVGDefs() {
+            // vytvor skupinu se sipkou pro rok 
+            var sipka_rok = defs.append("g").attr("id", "sipka_rok");
+            sipka_rok
+                .append ("rect")
+                .attr("x",0)
+                .attr("y",0)
+                .attr("width",43)
+                .attr("height", 20)
+            sipka_rok
+                .append("rect")
+                .attr("x",0)
+                .attr("y",0)
+                .attr("width", 10 )
+                .attr("height", 10)
+                .attr("transform","translate(42,3)rotate(45)");            
+        }
+        
+        
+        // vykresli tlacitka roku 
+        function drawYearLabels (layer) {
+            // pro vsechny volby vytvor spiku s rokem a okno s popisem vysledku
+            for (var i = 0; i < vysledky_stran.length; i++ ) {
+                var rok = vysledky_stran[i].rok;
+                var grpName = "rok"+rok;
+                //console.log("rok: "+rok+" i: "+i);
+                    
+                //sipka roku z SVG DEFS
+                layer
+                    .append("g")
+                    .attr("id", grpName)
+                    .attr("transform", "translate(0,"+i*vyskaRoky+")")
+                    .attr("class", "sipka_rok")
+                    .append("use")
+                    .attr("xlink:href","#sipka_rok");
+                
+                // text roku
+                var grp = d3.select("#"+grpName);
+                grp.append("text")
+                    .attr("class", "yearText")
+                    .attr("text-anchor", "middle")
+                    .attr("x", 22)
+                    .attr("y", 16)
+                    .attr("id", "tx_" + rok)
+                    .text(rok);
+                    
+                // skupina s popisem voleb
+                var popisGrp =  layer.append("g")
+                    .attr("id", "popis_"+rok)
+                    .classed("hidden",true);
+                
+                // podkladovy rect pod popis voleb
+                popisGrp.append("rect")
+                    .attr("x", sirkaRoku)
+                    .attr("y", 10+i*vyskaRoky)
+                    .attr("width", sirkaGrafu )
+                    .attr("height", vyskaRoky)
+                    .classed("popisRoku",true);
+                        
+                
+                // pro kaydou stranu v danzch volbach...  
+                for ( var j = 0; j < vysledky_stran[i].strany.length; j++){
+                            
+                    var strana = vysledky_stran[i].strany[j][0];
+                    var stranaName = strana;
+                    
+                    if (strana=="ČSSD") strana = "CSSD";
+                    if (strana=="KSČM") strana = "KSCM";
+                    if (strana=="KDU-ČSL") strana = "KDU-CSL";
+                    if (strana=="SPR-RSČ") strana = "SPR-RSC";
+                    if (strana=="ÚSVIT") strana = "USVIT";
+                    
+                    var className1 = ".cl_"+vysledky_stran[i].rok;
+                    
+                    var className2 = "."+strana;
+
+                    // vyber "poslance" z "i" roku a "j" strany - napr vsechny ODS v roce 1998
+                    var vyber =  gSVG.selectAll(className1).filter(className2);
+                    //vyber.classed("hidden", true);
+                    //console.log(vyber);
+
+                    var minX = sirkaSVG;
+                    var maxX = 0;
+                    // zjisti min a max X pozici "poslance" pro vykresleni linky
+                    vyber.each(function() { 
+                            var cx = Number( d3.select(this).attr("cx") );
+                            if (minX > cx) {minX = cx};
+                            if (maxX < cx) {maxX = cx};
+                        });
+                            
+                    var avgX = ~~((maxX-minX)/2);
+                    
+                    // hlavni offset
+                    var mainOffset = 5;
+                    
+                    // vykresli linku pod "poslanci"
+                    var lineOffset = 19 + mainOffset;
+                    popisGrp.append("line")
+                        .attr("class", "popisVolebLinka")
+                        .attr("x1", minX-3)
+                        .attr("y1", lineOffset+i*vyskaRoky)
+                        .attr("x2", maxX+3)
+                        .attr("y2", lineOffset+i*vyskaRoky);      
+                            
+                    //  vypis pod "poslance" nazev strany
+                    var stranaOffset = 35 + mainOffset;
+                        popisGrp.append("text")
+                        .attr("class", "popisVolebStrana")
+                        .attr("text-anchor", "middle")
+                        .attr("x", minX+avgX)
+                        .attr("y", stranaOffset+i*vyskaRoky)
+                        .text(stranaName);
+                            
+                    // vypis pocet kresel
+                    var kreslaOffset = 50 + mainOffset;
+                    popisGrp.append("text")
+                        .attr("class", "popisVolebVysledkyStrany")
+                        .attr("text-anchor", "middle")
+                        .attr("x", minX+avgX)
+                        .attr("y", kreslaOffset+i*vyskaRoky)
+                        .text(vysledky_stran[i].strany[j][1]+" křesel");
+                    
+                    // vypis procento strany 
+                    var procentaOffset = 64 + mainOffset;
+                    popisGrp.append("text")
+                        .attr("class", "popisVolebVysledkyStrany")
+                        .attr("text-anchor", "middle")
+                        .attr("x", minX+avgX)
+                        .attr("y", procentaOffset+i*vyskaRoky)
+                        .text(vysledky_stran[i].strany[j][2]+" %");
+                    
+                }
+                
+                // vypis poznamku k volbam
+                var poznamkaOffset = 90;
+                if (vysledky_stran[i].poznamka != "") {
+                    popisGrp.append("text")
+                        .attr("class", "popisVolebPoznamka")
+                        .attr("text-anchor", "left")
+                        .attr("x", sirkaRoku)
+                        .attr("y", poznamkaOffset+i*vyskaRoky)
+                        .text("Poznámka: "+vysledky_stran[i].poznamka);
+                }
+                
+                // vypis volebni ucast
+                var ucastOffset = 45;
+                popisGrp.append("text")
+                    .attr("class", "popisVolebUcast")
+                    .attr("text-anchor", "middle")
+                    .attr("x", sirkaRoku/2)
+                    .attr("y", ucastOffset+i*vyskaRoky)
+                    .text("účast");
+                popisGrp.append("text")
+                    .attr("class", "popisVolebUcast")
+                    .attr("text-anchor", "middle")
+                    .attr("x", sirkaRoku/2)
+                    .attr("y", ucastOffset+i*vyskaRoky+12)
+                    .text(vysledky_stran[i].ucast + " %");
+                    
+                // nastav zobraz cely popis pri mouseover
+                grp.on("mouseover", function () {
+                                        var thisOne = d3.select(this);       
+                                        var className = ".cl_"+thisOne.attr("id").slice(3);
+                                        var celyRok = gSVG.selectAll(className);
+                                        celyRok.classed("point-selected", true);        
+                                        // ukaz info o volbach
+                                        var popisClass = "#popis_" + thisOne.attr("id").slice(3);
+                                        gSVG.selectAll(popisClass).classed("hidden", false);
+                                    })
+                
+                // nastav skryti celeho popisu pri mouseout
+                    .on("mouseout", function () {
+                                        var thisOne = d3.select(this);       
+                                        var className = ".cl_"+thisOne.attr("id").slice(3);
+                                        var celyRok = gSVG.selectAll(className);
+                                        celyRok.classed("point-selected", false);
+                                        // schovej info o volbach
+                                        var popisClass = "#popis_" + thisOne.attr("id").slice(3);
+                                        gSVG.select(popisClass).classed("hidden", true);
+                                    })
+            }            
+        }
+        
+        // vykresli vsechny "poslance"
+        function drawAllPoints () {
+            drawPoints(zvoleni_1996, 1996, layer3);
+            drawPoints(zvoleni_1998, 1998, layer3);
+            drawPoints(zvoleni_2002, 2002, layer3);
+            drawPoints(zvoleni_2006, 2006, layer3);
+            drawPoints(zvoleni_2010, 2010, layer3);
+            drawPoints(zvoleni_2013, 2013, layer3);
+            //drawPoints(zvoleni_2017, 2017, layer3);
+            
+            drawChangePoints (zmeny_1996, 1996, layer1);
+            drawChangePoints (zmeny_1998, 1998, layer1);
+            drawChangePoints (zmeny_2002, 2002, layer1);
+            drawChangePoints (zmeny_2006, 2006, layer1);
+            drawChangePoints (zmeny_2010, 2010, layer1);
+            drawChangePoints (zmeny_2013, 2013, layer1);
+        }
+        
+        
+        // vykresli "poslance"
+        function drawPoints(source, year, layer) {
+            
+            // podle roku zjisti kolikate jsou to volbry
+            var poradiVoleb = 0;
+            for (var i = 0; i < vysledky_stran.length; i++ ) {
+                if ( Number(year) == Number (vysledky_stran[i].rok) ) { 
+                        poradiVoleb = i;
+                        //console.log ("Rok: " + year + " pozice: "+ poradiVoleb);
+                    }                
+            }
+            
+            // zjisti si mezery mezi skupinami "poslancu"
+            var space = getSpacing(vysledky_stran[poradiVoleb].strany.length);
+            
+            // uloz nazev prvni strany
+            var lastParty = source[0].strana;
+            
+            // pocitadlo - kolikata je to strana
+            var partyCounter = 0;
+            
+            // zjisti ze stylu velikost bodu "poslance"
+            var velikostBodu = getStyleProperty("point", "rx");
+                //console.log("velikost bodu "+ velikostBodu);
+            
+            //projed vsechny poslance ve vysledcich
+            for (var i = 0; i < source.length; i++) {
+                // pokud je nazev strany jiny nez lastParty, jsme u dalsi strany a zvedni pocitadlo
+                if (source[i].strana != lastParty) { 
+                    lastParty = source[i].strana;
+                    partyCounter ++ ; 
+                    //console.log ("partyCounter: "+ partyCounter+" lastParty: "+ lastParty);                    
+                }
+    
+                // pokud nejsme u posledni strany tak pouzij space[0], jinak space[2] pro vzpocet X pozice "poslance"
+                if ( partyCounter+1 < vysledky_stran[poradiVoleb].strany.length) {
+                    var cx = sirkaRoku + 2 + (i * (velikostBodu)) + (partyCounter * space[0]);
+                } else { var cx = sirkaRoku + 2 + (i * (velikostBodu)) + ((partyCounter-1) * space[0]+space[1]); }
+                
+                // vypocti Y pozici "poslance"
+                var cy = poradiVoleb * vyskaRoky;
+                
+                // nazev tridy podle roku
+                var cl1 = "cl_"+year;  
+                
+                // nazev tridy podle strany
+                var cl2 = source[i].strana;
+                
+                if (cl2=="ČSSD") cl2 = "CSSD";
+                if (cl2=="KSČM") cl2 = "KSCM";
+                if (cl2=="KDU-ČSL") cl2 = "KDU-CSL";
+                if (cl2=="SPR-RSČ") cl2 = "SPR-RSC";
+                if (cl2=="ÚSVIT") cl2 = "USVIT";
+            
+                //
+                
+                
+                // vykresli "poslance"
+                layer
+                    .append("ellipse")
+                    // prirad tridu podle roku, strany a point  tridu
+                    .attr("class", cl1+ " "+cl2+" point")
+                    .attr("cx", cx)
+                    .attr("cy", cy+10)
+                    // nastav id podle id poslance
+                    .attr("id", source[i].id)
+                
+                    // nastav reakci na mouseover
+                    .on("mouseover", function () { selectByID (this.id)})
+                    
+                    // nastav reakci na mouse out
+                    .on("mouseout", function () { deselectCurrentSelection () })
+                
+                    // nastav reakci na click
+                    .on("click", function () { showLinkPanel (this.id) });     
+            }           
+        }
+        
+        
+        // vykresli zmeny poslancu
+        function drawChangePoints (source, year, layer) {
+            var  sel = "";
+            
+            var poradiVoleb = 0;
+            for (var i = 0; i < vysledky_stran.length; i++ ) {
+                if ( Number(year) == Number (vysledky_stran[i].rok) ) { 
+                        poradiVoleb = i;
+                        //console.log ("Rok: " + year + " pozice: "+ poradiVoleb);
+                    }                
+            }
+            
+            for (var i = 0; i < source.length; i++) {                
+                
+                //console.log ("rok: "+year+" fromID: "+ source[i].from+" ID: "+ source[i].id+" dily: "+ source[i].dily);
+                
+                // vyber vse podle roku a zkus najit fromID
+                sel = gSVG.selectAll(".cl_"+year).filter("#"+source[i].from);
+                
+                //console.log ("sel._groups.length "+ sel._groups[0].length);
+                
+                // pokud je vyber null, zkus najit fromID ve zmenach
+                if (sel._groups[0].length == 0)  { 
+                    sel = gSVG.selectAll(".cl_"+year+"z").filter("#"+source[i].from);
+                    //console.log ("sel._groups.length "+ sel._groups[0].length);
+                }
+                
+                
+                // nastav cx podle nalezeneho objektu
+                cx = sel.attr("cx");                
+                //nastav cy 
+                cy = Number(sel.attr("cy")) + ~~(vyskaRoky/source[i].dily);
+                //console.log("change cx: " +cx +" cy: "+cy);
+                
+                // nazev tridy podle roku a oynac ze je to zmena
+                var cl1 = "cl_"+year+"z";  
+                
+                // nazev tridy podle strany
+                var cl2 = source[i].strana;
+                if (cl2=="ČSSD") cl2 = "CSSD";
+                if (cl2=="KSČM") cl2 = "KSCM";
+                if (cl2=="KDU-ČSL") cl2 = "KDU-CSL";
+                if (cl2=="SPR-RSČ") cl2 = "SPR-RSC";
+                if (cl2=="ÚSVIT") cl2 = "USVIT";
+                
+                
+                // vykresli zmenene "poslance"
+                var newPoint = layer.append("ellipse")
+                    // prirad tridu podle roku, strany a point  tridu
+                    .attr("class", cl1+ " "+cl2+" point")
+                    .attr("cx", cx)
+                    .attr("cy", cy)
+                    // nastav id podle id poslance
+                    .attr("id", source[i].id)
+            
+                    // nastav reakci na mouseover
+                    .on("mouseover", function () { selectByID (this.id)})
+                
+                    // nastav reakci na mouse out
+                    .on("mouseout", function () { deselectCurrentSelection () })
+                
+                    // nastav reakci na mouse click
+                    .on("click", function () { showLinkPanel (this.id)}); 
+            
+                    
+                drawTwoPointConnection (sel, newPoint);
+                
+                var nextYear = 0;
+                switch (year) {
+                    case 1996: nextYear = 1998;
+                                break;
+                    case 1998: nextYear = 2002;
+                                break;
+                    case 2002: nextYear = 2006;
+                                break;
+                    case 2006: nextYear = 2010;
+                                break;
+                    case 2010: nextYear = 2013;
+                                break;
+                    case 2013: nextYear = 2017;    
+                                break;
+                }
+                
+                var nextID = source[i].id;
+                sel = gSVG.selectAll(".cl_" + nextYear ).filter ("#"+nextID);
+                //console.log(sel._groups[0].length);
+                //sel = gSVG.selectAll(".cl_" + nextYear ).filter ("#"+source[i].id);
+                if (sel._groups[0].length>0) {
+                    //console.log("new line");
+                    drawTwoPointConnection (newPoint, sel);
+                }
+                
+            }
+        }
+        
+        
+        // vykresli spojnici mezi dvema body (d3 selekcemi)
+        function drawTwoPointConnection (sourcePoint, targetPoint) {
+            var srcX = sourcePoint.attr("cx");
+            var srcY = sourcePoint.attr("cy");
+            var tgtX = targetPoint.attr("cx");
+            var tgtY = targetPoint.attr("cy");
+            
+            var srcColor = sourcePoint.style("fill");
+            var tgtColor = targetPoint.style("fill");
+            var color = "";
+            
+            if (srcColor == tgtColor) { 
+                 color = srcColor;  
+            } else {
+                var scrName = "";
+            
+                if ( sourcePoint.classed("ODS") ) srcName = "ODS";
+                if ( sourcePoint.classed("CSSD") ) srcName = "CSSD";
+                if ( sourcePoint.classed("KSCM") ) srcName = "KSCM";
+                if ( sourcePoint.classed("KDU-CSL") ) srcName = "KDUCSL";
+                if ( sourcePoint.classed("SPR-RSC") ) srcName = "SPRRSC";
+                if ( sourcePoint.classed("ODA") ) srcName = "ODA";
+                if ( sourcePoint.classed("US") ) srcName = "US";
+                if ( sourcePoint.classed("SZ") ) srcName = "SZ";
+                if ( sourcePoint.classed("TOP09") ) srcName = "TOP09";
+                if ( sourcePoint.classed("VV") ) srcName = "VV";
+                if ( sourcePoint.classed("ANO") ) srcName = "ANO";
+                if ( sourcePoint.classed("USVIT") ) srcName = "USVIT";
+                            
+                var tgtName = "";
+                if ( targetPoint.classed("ODS") ) tgtName = "ODS";
+                if ( targetPoint.classed("CSSD") ) tgtName = "CSSD";
+                if ( targetPoint.classed("KSCM") ) tgtName = "KSCM";
+                if ( targetPoint.classed("KDU-CSL") ) tgtName = "KDUCSL";
+                if ( targetPoint.classed("SPR-RSC") ) tgtName = "SPRRSC";
+                if ( targetPoint.classed("ODA") ) tgtName = "ODA";
+                if ( targetPoint.classed("US") ) tgtName = "US";
+                if ( targetPoint.classed("SZ") ) tgtName = "SZ";
+                if ( targetPoint.classed("TOP09") ) tgtName = "TOP09";
+                if ( targetPoint.classed("VV") ) tgtName = "VV";
+                if ( targetPoint.classed("ANO") ) tgtName = "ANO";
+                if ( targetPoint.classed("USVIT") ) tgtName = "USVIT";
+                    
+                //console.log("srcName: "+ srcName + " tgtName: "+tgtName);
+                color = srcName + "_" + tgtName;
+                createLinearGradient (srcColor, tgtColor, color);
+                color = "url(#lg_"+color+")";   
+                //"url(#lg_CSSD_ODS)"
+                }
+            //console.log("line color: " + color);
+                    
+            drawConnectionLine (srcX, srcY, tgtX, tgtY, color, sourcePoint.attr("id"), layer0);
+        }
+
+        
+        // Zjistuje zda je ID v danem roce na seznamu zmen
+        function isIDChanging(ID, year){
+            var changes = "";
+            var result = false;
+            switch (year){
+                case 1996: changes = zmeny_1996;
+                            break;
+                case 1998: changes = zmeny_1998;
+                            break;
+                case 2002: changes = zmeny_2002;
+                            break;
+                case 2006: changes = zmeny_2006;
+                            break;    
+                case 2010: changes = zmeny_2010;
+                            break;    
+                case 2013: changes = zmeny_2013;
+                            break;
+                case 2017: changes = zmeny_2017;
+                            break;
+            }
+             for (var i = 0; i < changes.length; i++ ){
+                 if (changes[i].from == ID) result = true;
+             }
+            return result;
+        }
+        
+        
+        // vykresli spojeni mezi "poslanci"
+        function drawConnections(layer) {
+            // souradnice pro caru
+            var srcX = "";
+            var srcY = "";
+            var tgtX = "";
+            var tgtX = "";
+
+            //id pro vyhledavani
+            var tempID = "";
+            
+            // zdrojovy vyber
+            var sourceSel = "";
+            
+            //cilovy vyber
+            var targetSel = "";
+            
+            // projdi vsechny volby
+            for (var i = 0; i+1 < vysledky_stran.length; i++ ) {
+                // vyber vsechny z rkou voleb
+                sourceSel = gSVG.selectAll(".cl_"+vysledky_stran[i].rok);
+                var source = sourceSel._groups[0];
+                //console.log("sourceSel " +source.length);
+                for (var j = 0; j < source.length; j++ ) {
+                    tempID = source[j].id;
+                   
+                    // vyber z nasledujiciho roku objekt s tempID
+                    targetSel = gSVG.selectAll(".cl_"+vysledky_stran[i+1].rok).filter("#"+tempID);
+                    
+                    var result = isIDChanging(tempID, vysledky_stran[i].rok);
+                    //console.log("isChanging: " + result);
+                    if ( result== false ) 
+                    if (targetSel._groups[0].length>0) {
+                        srcX = sourceSel.filter("#"+tempID).attr("cx");
+                        srcY = sourceSel.filter("#"+tempID).attr("cy");
+                        
+                        tgtX = targetSel.filter("#"+tempID).attr("cx");
+                        tgtY = targetSel.filter("#"+tempID).attr("cy");
+                        
+                        var targetID = targetSel.attr("id");
+                        //console.log("'sourceID: "+ tempID +"target ID "+ targetID+"\nsrcX: "+srcX+" srcY: "+srcY+" tgtX: "+tgtX+" tgtY: "+tgtY);
+                        
+                        
+                        var color = "";
+                        var srcColor = sourceSel.filter("#"+tempID).style("fill");
+                        var tgtColor = targetSel.filter("#"+tempID).style("fill");
+                        //console.log("srcCol: "+srcColor+" tgtCol: "+tgtColor);
+                        if (srcColor == tgtColor) { 
+                            color = srcColor;  
+                        } else {
+                            
+                            var scrName = "";
+                            if ( sourceSel.filter("#"+tempID).classed("ODS") ) srcName = "ODS";
+                            if ( sourceSel.filter("#"+tempID).classed("CSSD") ) srcName = "CSSD";
+                            if ( sourceSel.filter("#"+tempID).classed("KSCM") ) srcName = "KSCM";
+                            if ( sourceSel.filter("#"+tempID).classed("KDU-CSL") ) srcName = "KDUCSL";
+                            if ( sourceSel.filter("#"+tempID).classed("SPR-RSC") ) srcName = "SPRRSC";
+                            if ( sourceSel.filter("#"+tempID).classed("ODA") ) srcName = "ODA";
+                            if ( sourceSel.filter("#"+tempID).classed("US") ) srcName = "US";
+                            if ( sourceSel.filter("#"+tempID).classed("SZ") ) srcName = "SZ";
+                            if ( sourceSel.filter("#"+tempID).classed("TOP09") ) srcName = "TOP09";
+                            if ( sourceSel.filter("#"+tempID).classed("VV") ) srcName = "VV";
+                            if ( sourceSel.filter("#"+tempID).classed("ANO") ) srcName = "ANO";
+                            if ( sourceSel.filter("#"+tempID).classed("USVIT") ) srcName = "USVIT";
+                            
+                            var tgtName = "";
+                            if ( targetSel.filter("#"+tempID).classed("ODS") ) tgtName = "ODS";
+                            if ( targetSel.filter("#"+tempID).classed("CSSD") ) tgtName = "CSSD";
+                            if ( targetSel.filter("#"+tempID).classed("KSCM") ) tgtName = "KSCM";
+                            if ( targetSel.filter("#"+tempID).classed("KDU-CSL") ) tgtName = "KDUCSL";
+                            if ( targetSel.filter("#"+tempID).classed("SPR-RSC") ) tgtName = "SPRRSC";
+                            if ( targetSel.filter("#"+tempID).classed("ODA") ) tgtName = "ODA";
+                            if ( targetSel.filter("#"+tempID).classed("US") ) tgtName = "US";
+                            if ( targetSel.filter("#"+tempID).classed("SZ") ) tgtName = "SZ";
+                            if ( targetSel.filter("#"+tempID).classed("TOP09") ) tgtName = "TOP09";
+                            if ( targetSel.filter("#"+tempID).classed("VV") ) tgtName = "VV";
+                            if ( targetSel.filter("#"+tempID).classed("ANO") ) tgtName = "ANO";
+                            if ( targetSel.filter("#"+tempID).classed("USVIT") ) tgtName = "USVIT";
+                            
+                            //console.log("srcName: "+ srcName + " tgtName: "+tgtName);
+                            color = srcName + "_" + tgtName;
+                            createLinearGradient (srcColor, tgtColor, color);
+                            color = "url(#lg_"+color+")";   
+                            //"url(#lg_CSSD_ODS)"
+                        }
+                        //console.log("line color: " + color);
+                        
+                        drawConnectionLine (srcX, srcY, tgtX, tgtY, color, tempID, layer0);
+                        
+                    }
+                }
+            }
+        }
+        
+        
+        //podle jmena v sidepanelu najdi ID v repreListu
+        function getIDFromList (name) {
+            for (var i = 0; i < repreList.length; i++) {
+                if (name == repreList[i].prijmeni + ' ' + repreList[i].jmeno) { return repreList[i].id };
+            }
+        }
+        
+        
+        // odznaci soucasny vyber
+        function deselectCurrentSelection() {
+            if (selectedID != "") {
+                // deselekce
+                // vyber co je zvyrazneno
+                var sel = gSVG.selectAll("#"+selectedID);
+                //vypni tridy selekce
+                sel.filter(".line").classed("line-selected", false);
+                sel.filter(".point").classed("point-selected", false);
+            
+                //vynuluj aktualni selekci
+                selectedID = "";
+                
+                // vymaz popisku
+                //personalInfo.text(" ");
+                var InfoPanel = d3.select("#infoPanel");
+                InfoPanel.classed("hidden", true);
+            }
+        }
+       
+        
+        // najdi vsechny objekty s timto ID
+        function selectByID (ID) {
+            // odznac
+            deselectCurrentSelection();
+            // uloz si nove ID aktualniho vyberu
+            selectedID = ID;
+            
+            var sel =  gSVG.selectAll("#"+ID);
+            // zapni tridy selekce
+            sel.filter(".line").classed("line-selected", true);
+            sel.filter(".point").classed("point-selected", true);
+            
+            // napln popisku
+            //personalInfo.text(ID + " "+getNameByID (ID) );
+            
+            var jmeno = d3.select("#nameTxt");
+            jmeno.text(getNameByID(ID) );
+            
+                
+            var InfoPanel = d3.select("#infoPanel");
+            InfoPanel.classed("hidden", false);
+        }
+        
+        
+        // ziska popis poslance podle ID
+        function getDescritionByID (ID) {
+            for (var i = 0; i < repreList.length; i++ ) {
+                if (repreList[i].id == ID) return repreList[i].popis;
+            }
+        }
+        
+        // ziska jmeno podle ID
+        function getNameByID (ID) {
+            for (var i = 0; i < repreList.length; i++ ) {
+                if (repreList[i].id == ID) return repreList[i].jmeno+" "+repreList[i].prijmeni;
+            }
+        }
+        
+        /* podle roku vrati volebni ucast */
+        function getTurnout(year){
+            for (var i = 0; i < vysledky_stran.length; i++ ) {
+                if (vysledky_stran[i].rok == year) return vysledky_stran[i].ucast;
+            }
+        }
+        
+        
+        // ziska hodnotu atributu z CSS tridy
+        function getStyleProperty(CLASSname, attribute) {
+            CLASSname = "." + CLASSname;
+            var styleSheets = document.styleSheets;
+            var styleSheetsLength = styleSheets.length;
+            for(var i = 0; i < styleSheetsLength; i++){
+                if (styleSheets[i].rules ) { var classes = styleSheets[i].rules; }
+                else { 
+                        try {  if(!styleSheets[i].cssRules) {continue;} } 
+                        //Note that SecurityError exception is specific to Firefox.
+                        catch(e) { if(e.name == 'SecurityError') {
+                            console.log("SecurityError. Can not read: "+ styleSheets[i].href);  
+                            continue; }
+                        }
+                        var classes = styleSheets[i].cssRules ;
+                    }
+                for (var x = 0; x < classes.length; x++) {
+                    //console.log(classes[x].selectorText);
+                    if (classes[x].selectorText == CLASSname) {                          
+                        //var ret = classes[x].cssText;
+                        var ret = classes[x].style.getPropertyValue(attribute);
+                        return ret;
+                    }
+                }
+            }
+        }
+        
+        
+        // vytvor v SVG DEFS linearni gradient
+        /* pokud neexistuje vytvori v definici SVG linearni gradient 
+        startCol -> endCol pod jmenem "lg_"+name */
+        function createLinearGradient(startCol, endCol, name){
+            var name="lg_"+name;
+            var existingGradient = d3.select("#"+name);
+            if (existingGradient._groups[0][0] == null){
+                var col1 = String(startCol);
+                var col2 = String(endCol);                
+                var gradient = defs
+                    .append("linearGradient")
+                    .attr("id", name)
+                    .attr("x1", "0%")
+                    .attr("x2", "0%")
+                    .attr("y1", "0%")
+                    .attr("y2", "100%");
+                gradient.append("stop")
+                    .attr('class', 'start')
+                    .attr("offset", "0%")
+                    .attr("stop-color", col1)
+                    .attr("stop-opacity", 1);
+                gradient.append("stop")
+                    .attr('class', 'end')
+                    .attr("offset", "100%")
+                    .attr("stop-color", col2)
+                    .attr("stop-opacity", 1);
+            }    
+        }
+        
+        
+        // vypocti mezery mezi stranami ("poslanci") - vraci pole o dvou polozkach
+        /*  1. normalni mezera mezi stranami
+            2. posledni mezera dorovnavajici celkovy rozmer */
+        function getSpacing(pocetStran) {
+            var spacing = [0,0]; 
+            var leftMargin = 20;
+            var velikostBodu = getStyleProperty("point", "rx");
+            spacing[0] = ~~( (sirkaSVG-sirkaRoku-200*velikostBodu-leftMargin) / (pocetStran-1));
+            spacing[1] = (sirkaSVG-sirkaRoku-200*velikostBodu-leftMargin) - (spacing[0]*(pocetStran-2));
+            return spacing;                
+        }
+        
+        
+        // nakresli spojnici mezi dvema body
+        function drawConnectionLine (sourceX, sourceY, targetX, targetY, color, ID, layer ) {
+            //var souradnice = { "x": 0, "y": 0};
+            //var LineData =[];
+            var offset = 4;
+                            
+            LineData2 = [ 
+                        {"x": sourceX, "y": sourceY },
+                        {"x": sourceX, "y": Number(sourceY)+offset },
+                        {"x": targetX, "y": Number(targetY)-offset },
+                        {"x": targetX, "y": targetY }
+                        ];
+                 
+            var lineFunction = d3.line()
+                .x(function(d) { return d.x; })
+                .y(function(d) { return d.y; })
+                //.curve(d3.curveMonotoneY);
+                //.curve(d3.d3.curveBundle);
+                .curve(d3.curveCatmullRom.alpha(0.6));
+            /* typy krivek z D3 - k testovani
+                d3.curveBasis
+                d3.curveBundle
+                d3.curveCardinal  
+                d3.curveCardinal.tension(0.5)
+                d3.curveCardinalClosed
+                d3.curveCardinalOpen
+                d3.curveCatmullRom
+                d3.curveCatmullRom.alpha(0.3)
+                d3.curveCatmullRomClosed
+                d3.curveCatmullRomOpen
+                d3.curveLinear
+                d3.curveLinearClosed
+                curveMonotoneX
+                d3.curveMonotoneY
+                d3.curveNatural
+                d3.curveStep
+                d3.curveStepAfter
+                d3.curveStepBefore
+            */
+            layer
+                .append("path")
+                .attr("d", lineFunction(LineData2) )
+                .attr("class", "line")
+                .attr("stroke", color)
+                .attr("id", ID)
+                .on ("mouseover", function () { selectByID (ID)} )
+                .on ("mouseout", function() { deselectCurrentSelection () })
+                .on("click", function () { showLinkPanel (ID) });  ;
+        }
+        
+        
+        // napln nameList v postranim panelu daty
+        function fillNameList() {
+            //console.log('fillingList...\n' + repreList + ' ' + repreList.length);
+            var list = d3.select("#nameList");
+            //console.log(list);
+            for (var i = 0; i < repreList.length; i++) {
+                list.append("li")
+                    .attr("id", "lis")
+                    //.html(repreList[i].prijmeni + ' ' + repreList[i].jmeno+' '+repreList[i].id)
+                    .html(repreList[i].prijmeni + ' ' + repreList[i].jmeno)
+                    .on("mouseover", function () { selectByID ( getIDFromList (this.innerText) );
+                                                   //console.log('over ' + this.innerText);
+                                                   
+                                                 })                     
+                    .on("click", function () {
+                                    //console.log('click ' + this.innerText)
+                                    //console.log('repreListID: '+getIDFromList(this.innerText));
+                                    selectByID ( getIDFromList (this.innerText) );
+                                    showLinkPanel (getIDFromList(this.innerText));
+                                    closeNav();
+
+                                });
+            }
+        }
+        
+        
+        //filtrovani seznamu jmen
+        function filterNameList() {
+            var input, filter, ul, li, a, i;
+            input = document.getElementById('nameSearch');
+            filter = input.value.toUpperCase();
+            //console.log("filter " + filter);
+            ul = document.getElementById("nameList");
+            li = ul.getElementsByTagName('li');
+            // projed vsechny <li> v seznamu a schovej vsechno co nesouhlasi
+            for (i = 0; i < li.length; i++) {
+                if (li[i].textContent.toUpperCase().indexOf(filter) > -1) {
+                    li[i].style.display = "";
+                }
+                else {
+                    li[i].style.display = "none";
+                }
+            }
+        }
+        
+        
+        // vytvori postranni panel s vyhledavacim polem a seznamem jmen (prazdnym)
+        function createSidePanel() {
+            var body = d3.select("body");
+            var div = body.append("div")
+                .attr("id", "sideOverlay")
+                .attr("class", "sideOverlay");
+            
+            div.append("a")
+                .html("&times;")
+                .attr("class", "closeBtn")
+                .on("click", function () { closeNav() });
+            
+            div.append("input")
+                .attr("type", "text")
+                .attr("id", "nameSearch")
+                .attr("placeholder", "hledat podle jména...")
+                .on("keyup", function () { filterNameList() });            
+            
+            div.append("ul").attr("id", "nameList");
+            
+            var gDiv = d3.select("#graphDiv");
+            //var sidePanelBtn = body.append("div");
+            var sidePanelBtn = gDiv.append("div");
+            sidePanelBtn.attr("id", "sidePanelBtn")
+                .attr("class", "sidePanelBtn");            
+            sidePanelBtn.append("img")
+                .attr("src", "css/searchicon.png")
+                .attr("id", "searchIcon")
+                .on("click", function () { openNav() } );
+        }
+        
+        
+        //vytvor panel pro informace o poslanci
+        function createInfoPanel() {
+            var gDiv = d3.select("#graphDiv");
+            var div = gDiv.append("div")
+                .attr("id", "infoPanel")
+                .classed("hidden", true);
+            
+            div.append("div")
+                .attr("id", "nameTxt")
+                .text("Jmeno Prijmeni");
+            
+            /*div.append("div")
+                .attr("id", "popisTxt");*/
+        }
+        
+        
+        // vytvor LinkPanel
+        function createLinkPanel() {
+            var gDiv = d3.select("#graphDiv");
+            var div = gDiv.append("div")
+                .attr("id", "linkPanel")
+                .classed("hidden", true);
+            
+            div.append("a")
+                .html("&times;")
+                .attr("class", "closeBtnLP")
+                .on("click", function () { var lp = d3.select("#linkPanel");
+                                           lp.classed ("hidden", true)});
+            
+            div.append("div")
+                .attr("id", "nameTxtLP")
+                .text("Jmeno Prijmeni");
+            
+             div.append("div")
+                .attr("id", "URL1")
+                .text("přejít na Poslaneckou sněmovnu");
+            
+            div.append("div")
+                .attr("id", "URL2")
+                .text("přejít na Wikipedii");
+            
+            div.append("div")
+                .attr("id", "URL3")
+                .text("přejít na soukromé stránky");
+            
+        }
+        
+        
+        // naplni link panel a zobrazi ho
+        function showLinkPanel(ID) {
+            var LP = d3.select("#linkPanel");
+            
+            var jmeno = d3.select("#nameTxtLP");
+            jmeno.text(getNameByID(ID) ); 
+          
+            var pspcr = "";
+            var wiki = "";
+            var personal = "";
+            
+            for (var i = 0;i < repreList.length; i++) {
+                if (ID === repreList[i].id) {   pspcr = repreList[i].pspcr; 
+                                                wiki = repreList[i].wiki; 
+                                                personal = repreList[i].personal };
+            }
+            //console.log ("links: psp: " + pspcr+" wiki: "+wiki+" personal: "+personal);
+            
+            var url1 = d3.select("#URL1");
+            var url2 = d3.select("#URL2");
+            var url3 = d3.select("#URL3");
+            
+            if (pspcr !="") {
+                url1.classed("hidden", false);
+                url1.on("click", function () { window.open(pspcr) });
+            } else { url1.classed ("hidden", true) };
+            
+            if (wiki !="") {
+                url2.classed("hidden", false);
+                url2.on("click", function () { window.open(wiki) });
+            } else { url2.classed ("hidden", true) };
+            
+            
+            if (personal !="") {
+                url3.classed("hidden", false);
+                url3.on("click", function () { window.open(personal) });
+            } else { url3.classed ("hidden", true) };
+            
+            LP.classed("hidden", false);
+        }
+        
+        
+        
+        // otevreni postraniho panelu
+        function openNav() {
+            document.getElementById("sideOverlay").style.right = "0px";
+            document.getElementById("sidePanelBtn").style.opacity = 0;
+        }
+        
+        
+        // zavreni postraniho panelu
+        function closeNav() {
+            document.getElementById("sideOverlay").style.right = "-200px";
+            document.getElementById("sidePanelBtn").style.opacity = 0.6;
+        }
+
+
+
+        // vytvor preloader div pro SVG a text
+        function createPreloader() {
+            var body = d3.select("graphDiv");
+            var div = body.append("div")
+                .attr("id", "preloader")
+                .style("display", "inline");
+            
+            div.append("img")
+               .attr("src", "css/spin.gif");
+            
+            div.append("p")
+                .attr("id", "preloadText")
+                .text("Načítám data...");
+        }
+        
+        
+    </script>
+    
+    
+    
+</body>
+
+</html>
