@@ -112,7 +112,7 @@
         createPreloader();
         createSidePanel();
         createLinkPanel();
-        createInfoPanel();        
+        createInfoPanel();
         //nacti vsechna TSV a zacni
         loadData();
         
@@ -206,6 +206,9 @@
         
                     // vykresli tlacitka s rokem voleb do vrstvy 1
                     drawYearLabels (layer2);
+                    
+                    // vykresli legendu
+                    drawLegend (layer2);
                 });        
     }              
         
@@ -245,6 +248,240 @@
                 .attr("transform","translate(42,3)rotate(45)");            
         }
         
+        
+        
+        // vykresli legendu
+        function drawLegend (layer) {
+           
+            // skupina pro legendu
+            layer
+                .append("g")
+                .attr ("id", "legenda");
+            
+            //vyber skupinu
+            var grp = d3.select("#legenda");
+            
+            // sourdnice pro umisteni
+            var locX = 60;
+            var locY = 620;
+            var radius = 6;
+            var textXshift = 10;
+            var textYshift = 5;
+               
+            // ANO
+            grp.append("ellipse")
+                .attr("class", "ANO")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("ANO");
+            
+            locX = locX + 65;
+            
+            
+            // CSSD
+            grp.append("ellipse")
+                .attr("class", "CSSD")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("ČSSD");
+            
+            locX = locX + 65;
+         
+            
+            // KDU
+            grp.append("ellipse")
+                .attr("class", "KDU-CSL")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("KDU-ČSL");
+            
+            locX = locX + 85;
+            
+            
+            // KSCM
+            grp.append("ellipse")
+                .attr("class", "KSCM")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("KSČM");
+            
+            locX = locX + 70;
+            
+            
+            // ODA
+            grp.append("ellipse")
+                .attr("class", "ODA")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("ODA");
+            
+             locX = locX + 60;
+            
+            
+            // ODS
+            grp.append("ellipse")
+                .attr("class", "ODS")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("ODS");
+            
+             locX = locX + 60;
+            
+            
+            // SPR-RSC
+            grp.append("ellipse")
+                .attr("class", "SPR-RSC")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("SPR-RSČ");
+            
+            locX = locX + 85;
+            
+            
+            // SZ
+            grp.append("ellipse")
+                .attr("class", "SZ")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("SZ");
+            
+            locX = locX + 45;
+            
+            
+            
+            // TOP09
+            grp.append("ellipse")
+                .attr("class", "TOP09")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("TOP09");
+            
+            locX = locX + 70;
+            
+            
+            // US
+            grp.append("ellipse")
+                .attr("class", "US")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("US");
+            
+            locX = locX + 45;
+            
+            
+            // USVIT
+            grp.append("ellipse")
+                .attr("class", "USVIT")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("USVIT");
+            
+            locX = locX + 65;
+            
+            
+            // VV
+            grp.append("ellipse")
+                .attr("class", "VV")
+                .attr ("rx", radius)
+                .attr ("ry", radius)
+                .attr("cx", locX)
+                .attr("cy", locY);
+            
+            grp.append("text")
+                .attr("class", "yearLegend")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift)
+                .text("VV");
+            
+            locX = locX + 30;
+            
+            // hledat podle jmena
+            grp.append("text")
+                .attr("class", "yearLegendSearch")
+                .attr("x", locX + textXshift)
+                .attr("y", locY + textYshift-1)
+                .text("[ Hledat podle jména ]")
+                .on("click", function () { openNav() } );
+            
+        }
+      
         
         // vykresli tlacitka roku 
         function drawYearLabels (layer) {
@@ -841,12 +1078,14 @@
             }
         }
         
+        
         // ziska jmeno podle ID
         function getNameByID (ID) {
             for (var i = 0; i < repreList.length; i++ ) {
                 if (repreList[i].id == ID) return repreList[i].jmeno+" "+repreList[i].prijmeni;
             }
         }
+        
         
         /* podle roku vrati volebni ucast */
         function getTurnout(year){
@@ -1045,14 +1284,17 @@
             div.append("ul").attr("id", "nameList");
             
             var gDiv = d3.select("#graphDiv");
-            //var sidePanelBtn = body.append("div");
+            
             var sidePanelBtn = gDiv.append("div");
+            
             sidePanelBtn.attr("id", "sidePanelBtn")
                 .attr("class", "sidePanelBtn");            
+            
             sidePanelBtn.append("img")
                 .attr("src", "css/searchicon.png")
                 .attr("id", "searchIcon")
                 .on("click", function () { openNav() } );
+            
         }
         
         

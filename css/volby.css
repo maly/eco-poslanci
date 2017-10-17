@@ -47,7 +47,7 @@
 }
 
 .SZ {
-    fill: #339933;
+    fill: #5bd220;
 }
 
 .TOP09 {
@@ -63,7 +63,7 @@
 }
 
 .USVIT {
-    fill: #669933;
+    fill: #129631;
 }
 
 
@@ -167,6 +167,29 @@
     font-size: 0.7em;
     fill: black; 
 }
+
+
+.yearLegend {
+    opacity: 1;
+    font-family: sans-serif;
+    font-size: 0.8em;
+    font-weight: 600;
+    fill: black; 
+}
+
+.yearLegendSearch {
+    opacity: 1;
+    font-family: sans-serif;
+    font-size: 0.8em;
+    font-weight: 400;
+    fill: gray;
+}
+
+.yearLegendSearch:hover {
+    fill: black;
+    cursor: pointer;
+}
+
 
 
 /* skryty objekt */
@@ -304,6 +327,8 @@ body {
     left: -11px;
 }
 
+
+
 /* preloader */
 #preloader {
     width: 76px;
@@ -353,7 +378,7 @@ body {
     position: absolute;
     margin-left: auto;
     margin-right: auto;
-    top: 590px;
+    top: 565px;
     left: calc(50% - 150px);
     padding: 15px;
     border-radius: 6px;   
@@ -375,6 +400,9 @@ body {
     height: 75px;
     overflow: hidden;
 }
+
+
+
 
 /*LinkPanel*/
 #linkPanel {
